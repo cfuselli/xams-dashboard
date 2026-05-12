@@ -36,6 +36,7 @@ RUN_TABLE_COLS = [
 app.layout = html.Div(
     [
         dcc.Location(id="url", refresh=False),
+        dcc.Store(id="url-init-done", data={"done": False}),
         dcc.Store(id="selected-run-store", data={"run_id": None}),
         dcc.Interval(id="refresh-interval", interval=20_000, n_intervals=0),
         html.H2("XAMS Dashboard"),
@@ -126,40 +127,45 @@ def refresh_runs(_n, _refresh_clicks, _load_clicks, selected):
 @app.callback(
     Output("selected-run-store", "data"),
     Output("run-id-input", "value"),
+    Output("url-init-done", "data"),
     Input("url", "search"),
     Input("load-run-btn", "n_clicks"),
     Input("runs-table", "selected_rows"),
     State("run-id-input", "value"),
     State("runs-table", "data"),
     State("selected-run-store", "data"),
+    State("url-init-done", "data"),
 )
-def choose_run(url_search, _load_clicks, selected_rows, typed_run_id, table_data, current):
-    # Priority 1: URL query run_id, so Command-R keeps selection
-    if url_search:
+def choose_run(url_search, _load_clicks, selected_rows, typed_run_id, table_data, current, url_init_done):
+    trigger = dash.ctx.triggered_id
+    url_initialized = bool((url_init_done or {}).get("done"))
+
+    # Use URL run_id only once per page load (or if nothing selected yet)
+    if trigger == "url" and (not url_initialized or (current or {}).get("run_id") is None) and url_search:
         q = parse_qs(url_search.lstrip("?"))
         run_vals = q.get("run_id", [])
         if run_vals:
             try:
                 rid = int(run_vals[0])
-                return {"run_id": rid}, rid
+                return {"run_id": rid}, rid, {"done": True}
             except Exception:
                 pass
 
-    if selected_rows and table_data:
+    if trigger == "runs-table" and selected_rows and table_data:
         idx = selected_rows[0]
         if 0 <= idx < len(table_data):
             rid = int(table_data[idx]["run_id"])
-            return {"run_id": rid}, rid
+            return {"run_id": rid}, rid, {"done": True}
 
-    if typed_run_id is not None:
+    if trigger == "load-run-btn" and typed_run_id is not None:
         rid = int(typed_run_id)
-        return {"run_id": rid}, rid
+        return {"run_id": rid}, rid, {"done": True}
 
     if current and current.get("run_id") is not None:
         rid = int(current["run_id"])
-        return current, rid
+        return current, rid, {"done": True}
 
-    return {"run_id": None}, None
+    return {"run_id": None}, None, {"done": True}
 
 
 @app.callback(
