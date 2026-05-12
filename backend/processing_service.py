@@ -4,7 +4,7 @@ import os
 import subprocess
 from datetime import datetime
 import time
-from typing import Dict
+from typing import Dict, List, Union
 
 from .config import settings
 
@@ -17,13 +17,14 @@ class ProcessingService:
         self._last_submit_by_run = {}  # type: Dict[int, float]
         self._cooldown_seconds = 45
 
-    def submit_run(self, run_id: int, target: str = "events") -> dict:
+    def submit_run(self, run_id: int, target: Union[str, List[str]] = "events") -> dict:
         now = time.time()
         last = self._last_submit_by_run.get(int(run_id), 0.0)
+        targets = target if isinstance(target, list) else [target]
         if now - last < self._cooldown_seconds:
             return {
                 "run_id": int(run_id),
-                "target": target,
+                "target": targets,
                 "job_name": None,
                 "submitted": False,
                 "returncode": 409,
@@ -32,7 +33,8 @@ class ProcessingService:
             }
 
         run_id_s = f"{int(run_id):06d}"
-        job_name = f"process_{run_id_s}_manual_{target}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        target_label = "_".join(targets)
+        job_name = f"process_{run_id_s}_manual_{target_label}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
 
         cmd = [
             "python",
@@ -40,11 +42,9 @@ class ProcessingService:
             "--run_id",
             run_id_s,
             "--target",
-            target,
-            "--output_folder",
-            self.output_dir,
-            "--production",
         ]
+        cmd.extend(targets)
+        cmd.extend(["--output_folder", self.output_dir, "--production"])
         try:
             os.makedirs(self.log_dir, exist_ok=True)
             p = subprocess.run(cmd, cwd=self.amstrax_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -52,7 +52,7 @@ class ProcessingService:
                 self._last_submit_by_run[int(run_id)] = now
             return {
                 "run_id": int(run_id),
-                "target": target,
+                "target": targets,
                 "job_name": job_name,
                 "submitted": p.returncode == 0,
                 "returncode": p.returncode,
@@ -62,7 +62,7 @@ class ProcessingService:
         except Exception as e:
             return {
                 "run_id": int(run_id),
-                "target": target,
+                "target": targets,
                 "job_name": job_name,
                 "submitted": False,
                 "returncode": -1,
