@@ -22,6 +22,8 @@ class RunSummary:
     start: datetime 
     end: datetime 
     processing_status: str 
+    has_raw_records: bool
+    has_events: bool
 
 
 @dataclass

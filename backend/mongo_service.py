@@ -47,7 +47,7 @@ class MongoService:
             query["processing_status.status"] = status
 
         cursor = (
-            self.runs.find(query, {"number": 1, "mode": 1, "start": 1, "end": 1, "processing_status": 1, "_id": 0})
+            self.runs.find(query, {"number": 1, "mode": 1, "start": 1, "end": 1, "processing_status": 1, "data.type": 1, "_id": 0})
             .sort("number", -1)
             .skip((page - 1) * page_size)
             .limit(page_size)
@@ -55,6 +55,7 @@ class MongoService:
         out: list[RunSummary] = []
         for doc in cursor:
             ps = doc.get("processing_status") or {}
+            dtypes = [d.get("type") for d in doc.get("data", []) if isinstance(d, dict)]
             out.append(
                 RunSummary(
                     number=int(doc["number"]),
@@ -62,6 +63,8 @@ class MongoService:
                     start=doc.get("start"),
                     end=doc.get("end"),
                     processing_status=ps.get("status"),
+                    has_raw_records=("raw_records" in dtypes),
+                    has_events=("events" in dtypes),
                 )
             )
         return out

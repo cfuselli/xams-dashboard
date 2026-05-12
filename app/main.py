@@ -7,6 +7,7 @@ import dash
 from dash import Dash, Input, Output, State, dash_table, dcc, html
 
 from backend.api import create_api_blueprint
+from backend.events_loader import load_event_features
 from backend.loadability import scan_disk_availability
 from backend.mongo_service import MongoService
 from backend.plots import make_drift_time_hist, make_s1_s2_hist2d, make_xy_map
@@ -23,6 +24,8 @@ server.register_blueprint(create_api_blueprint(mongo, processing))
 RUN_TABLE_COLS = [
     {"name": "Run", "id": "run_id"},
     {"name": "Mode", "id": "mode"},
+    {"name": "Raw", "id": "has_raw_records"},
+    {"name": "Events", "id": "has_events"},
     {"name": "Start", "id": "start"},
     {"name": "End", "id": "end"},
     {"name": "Status", "id": "processing_status"},
@@ -95,6 +98,8 @@ def refresh_runs(_n, _refresh_clicks, _load_clicks, selected):
         {
             "run_id": r.number,
             "mode": r.mode,
+            "has_raw_records": "yes" if r.has_raw_records else "no",
+            "has_events": "yes" if r.has_events else "no",
             "start": r.start,
             "end": r.end,
             "processing_status": r.processing_status,
@@ -176,10 +181,20 @@ def render_run(selected, _n):
         ]
     )
 
-    events = d.raw_doc.get("event_summary", {}) if isinstance(d.raw_doc.get("event_summary"), dict) else {}
+    event_features = load_event_features(int(run_id))
+    if not event_features.get("ok"):
+        summary = summary + "\nPlot data: {}".format(event_features.get("reason"))
     doc_json = json.dumps(d.raw_doc, default=str, indent=2)
 
-    return summary, availability, cols, doc_json, make_drift_time_hist(events), make_s1_s2_hist2d(events), make_xy_map(events)
+    return (
+        summary,
+        availability,
+        cols,
+        doc_json,
+        make_drift_time_hist(event_features),
+        make_s1_s2_hist2d(event_features),
+        make_xy_map(event_features),
+    )
 
 
 @app.callback(
