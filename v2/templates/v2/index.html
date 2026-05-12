@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>XAMS Dashboard v2</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <link rel="stylesheet" href="/static/v2/styles.css" />
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="app">
+    <header class="topbar">
+      <h1>XAMS Dashboard <span>v2</span></h1>
+      <div class="controls">
+        <input id="search" placeholder="Search run id / mode / status" />
+        <select id="statusFilter">
+          <option value="">All status</option>
+          <option value="done">done</option>
+          <option value="submitted">submitted</option>
+          <option value="running">running</option>
+          <option value="failed">failed</option>
+        </select>
+        <button id="refreshBtn">Refresh</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="panel runs">
+        <div class="panel-title">Runs</div>
+        <table id="runsTable">
+          <thead><tr><th></th><th>Run</th><th>Mode</th><th>Raw</th><th>Event info</th><th>Status</th><th>Start</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="pager"><button id="prevPage">Prev</button><span id="pageInfo"></span><button id="nextPage">Next</button></div>
+        <div class="batch-actions"><button id="submitSelected">Submit Selected</button><span id="submitResult"></span></div>
+      </section>
+
+      <section class="panel details">
+        <div class="panel-title">Run Details</div>
+        <pre id="runSummary"></pre>
+        <details><summary>Run Document JSON</summary><textarea id="runJson" readonly></textarea></details>
+      </section>
+
+      <section class="panel availability">
+        <div class="panel-title">Availability / Loadability</div>
+        <div class="table-wrap"><table id="availTable"><thead><tr><th>Type</th><th>Lineage</th><th>Current</th><th>Loadable</th><th>Files</th><th>Size MB</th><th>Reason</th></tr></thead><tbody></tbody></table></div>
+      </section>
+
+      <section class="panel plots">
+        <div class="panel-title">Plots</div>
+        <div class="plot-controls"><label>Bins <input id="bins" type="range" min="20" max="200" value="80" /></label><label><input id="logY" type="checkbox" /> Log color scale</label><span id="plotStatus"></span></div>
+        <div id="driftPlot" class="plot"></div>
+        <div id="s1s2Plot" class="plot"></div>
+        <div id="xyPlot" class="plot"></div>
+      </section>
+    </main>
+  </div>
+  <script src="/static/v2/app.js"></script>
+</body>
+</html>
