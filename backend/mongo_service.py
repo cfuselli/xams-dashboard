@@ -10,9 +10,24 @@ from .models import DataEntry, RunDetails, RunSummary
 
 class MongoService:
     def __init__(self, mongo_uri: str  = None):
+        self.client = None
+        self.runs = None
+        self._init_collections(mongo_uri)
+        self.processing = self.client[settings.processing_db][settings.processing_collection]
+
+    def _init_collections(self, mongo_uri: str = None) -> None:
+        # Prefer amstrax tunnel-aware access on STBC.
+        try:
+            import amstrax  # type: ignore
+
+            self.client = amstrax.get_mongo_client()
+            self.runs = amstrax.get_mongo_collection()
+            return
+        except Exception:
+            pass
+
         self.client = MongoClient(mongo_uri or settings.mongo_uri)
         self.runs = self.client[settings.run_db][settings.run_collection]
-        self.processing = self.client[settings.processing_db][settings.processing_collection]
 
     @staticmethod
     def _normalize_data_entry(entry: dict[str, Any]) -> DataEntry:
