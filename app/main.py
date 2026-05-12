@@ -267,13 +267,22 @@ def submit_processing(_clicks, selected):
         return "LED run detected. Events are not produced in this mode."
 
     availability = scan_disk_availability(int(run_id))
-    has_events = any((r.get("type") in ("event_info", "events") and r.get("loadable")) for r in availability)
-    if has_events:
-        return "Events already found on disk; no submission needed"
+    have_basics = any((r.get("type") == "event_basics" and r.get("loadable")) for r in availability)
+    have_positions = any((r.get("type") == "event_positions" and r.get("loadable")) for r in availability)
+    have_info = any((r.get("type") == "event_info" and r.get("loadable")) for r in availability)
+    if have_basics and have_positions and have_info:
+        return "Event feature products already present; no submission needed"
 
-    out = processing.submit_run(int(run_id), target="event_info")
+    out = processing.submit_run(int(run_id), target=["event_basics", "event_positions", "event_info"])
     if out["submitted"]:
-        return "Submitted processing job for run {}".format(run_id)
+        missing = []
+        if not have_basics:
+            missing.append("event_basics")
+        if not have_positions:
+            missing.append("event_positions")
+        if not have_info:
+            missing.append("event_info")
+        return "Submitted processing job for run {} (missing: {})".format(run_id, ", ".join(missing))
     if out["returncode"] == 409:
         return "Duplicate click blocked for run {}".format(run_id)
     return "Submission failed (code={})".format(out["returncode"])
