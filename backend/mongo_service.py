@@ -30,6 +30,14 @@ class MongoService:
         self.runs = self.client[settings.run_db][settings.run_collection]
 
     @staticmethod
+    def _processing_status_value(ps: Any) -> str:
+        if isinstance(ps, dict):
+            return ps.get("status", "unknown")
+        if isinstance(ps, str):
+            return ps
+        return "unknown"
+
+    @staticmethod
     def _normalize_data_entry(entry: dict[str, Any]) -> DataEntry:
         return DataEntry(
             data_type=entry.get("type", "unknown"),
@@ -55,7 +63,7 @@ class MongoService:
 
         out: list[RunSummary] = []
         for doc in cursor:
-            ps = doc.get("processing_status") or {}
+            ps = doc.get("processing_status")
             dtypes = [d.get("type") for d in doc.get("data", []) if isinstance(d, dict)]
             out.append(
                 RunSummary(
@@ -63,7 +71,7 @@ class MongoService:
                     mode=doc.get("mode"),
                     start=doc.get("start"),
                     end=doc.get("end"),
-                    processing_status=ps.get("status"),
+                    processing_status=self._processing_status_value(ps),
                     has_raw_records=("raw_records" in dtypes),
                     has_events=("events" in dtypes or "event_info" in dtypes),
                 )
@@ -95,12 +103,16 @@ class MongoService:
         doc = self.get_run_doc(run_id)
         if not doc:
             return {"found": False, "status": "missing_run"}
-        ps = doc.get("processing_status") or {}
+        ps = doc.get("processing_status")
+        status = self._processing_status_value(ps)
+        time_val = ps.get("time") if isinstance(ps, dict) else None
+        host_val = ps.get("host") if isinstance(ps, dict) else None
+        reason_val = ps.get("reason") if isinstance(ps, dict) else None
         return {
             "found": True,
             "run_id": run_id,
-            "status": ps.get("status", "unknown"),
-            "time": ps.get("time"),
-            "host": ps.get("host"),
-            "reason": ps.get("reason"),
+            "status": status,
+            "time": time_val,
+            "host": host_val,
+            "reason": reason_val,
         }
