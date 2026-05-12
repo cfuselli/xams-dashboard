@@ -9,7 +9,7 @@ from .models import DataEntry, RunDetails, RunSummary
 
 
 class MongoService:
-    def __init__(self, mongo_uri: str | None = None):
+    def __init__(self, mongo_uri: str  = None):
         self.client = MongoClient(mongo_uri or settings.mongo_uri)
         self.runs = self.client[settings.run_db][settings.run_collection]
         self.processing = self.client[settings.processing_db][settings.processing_collection]
@@ -25,7 +25,7 @@ class MongoService:
             raw=entry,
         )
 
-    def get_runs(self, page: int = 1, page_size: int = 25, status: str | None = None) -> list[RunSummary]:
+    def get_runs(self, page: int = 1, page_size: int = 25, status: str  = None) -> list[RunSummary]:
         page = max(1, page)
         query: dict[str, Any] = {}
         if status:
@@ -51,10 +51,10 @@ class MongoService:
             )
         return out
 
-    def get_run_doc(self, run_id: int) -> dict[str, Any] | None:
+    def get_run_doc(self, run_id: int) -> dict[str, Any] :
         return self.runs.find_one({"number": int(run_id)}, {"_id": 0})
 
-    def get_run_details(self, run_id: int) -> RunDetails | None:
+    def get_run_details(self, run_id: int) -> RunDetails :
         doc = self.get_run_doc(run_id)
         if not doc:
             return None

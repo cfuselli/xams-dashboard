@@ -8,7 +8,7 @@ from .config import settings
 
 
 class ProcessingService:
-    def __init__(self, amstrax_dir: str | None = None, log_dir: str | None = None, output_dir: str | None = None):
+    def __init__(self, amstrax_dir: str  = None, log_dir: str  = None, output_dir: str  = None):
         self.amstrax_dir = amstrax_dir or settings.stbc_amstrax_dir
         self.log_dir = log_dir or settings.stbc_log_dir
         self.output_dir = output_dir or settings.stbc_output_dir

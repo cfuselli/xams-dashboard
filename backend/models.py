@@ -8,30 +8,30 @@ from typing import Any
 @dataclass
 class DataEntry:
     data_type: str
-    host: str | None
-    location: str | None
-    lineage_hash: str | None
-    amstrax_version: str | None
+    host: str 
+    location: str 
+    lineage_hash: str 
+    amstrax_version: str 
     raw: dict[str, Any]
 
 
 @dataclass
 class RunSummary:
     number: int
-    mode: str | None
-    start: datetime | None
-    end: datetime | None
-    processing_status: str | None
+    mode: str 
+    start: datetime 
+    end: datetime 
+    processing_status: str 
 
 
 @dataclass
 class RunDetails:
     number: int
-    mode: str | None
-    start: datetime | None
-    end: datetime | None
+    mode: str 
+    start: datetime 
+    end: datetime 
     tags: list[dict[str, Any]]
     comments: list[dict[str, Any]]
-    processing_status: dict[str, Any] | None
+    processing_status: dict[str, Any] 
     data_entries: list[DataEntry]
     raw_doc: dict[str, Any]

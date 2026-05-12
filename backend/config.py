@@ -1,9 +1,10 @@
 import configparser
 from dataclasses import dataclass
 import os
+from typing import Dict
 
 
-def _load_xams_config() -> dict[str, str]:
+def _load_xams_config() -> Dict[str, str]:
     path = os.getenv("XAMS_CONFIG_FILE", os.path.join(os.path.expanduser("~"), ".xams_config"))
     if not os.path.exists(path):
         return {}
@@ -25,7 +26,11 @@ def _cfg_env(name: str, fallback: str) -> str:
 class Settings:
     mongo_uri: str = _cfg_env(
         "XAMS_MONGO_URI",
-        f"mongodb://{_XAMS.get('MONGO_USER', 'user')}:{_XAMS.get('MONGO_PASSWORD', 'password')}@127.0.0.1:{_XAMS.get('MONGO_PORT', '27017')}/admin",
+        "mongodb://{}:{}@127.0.0.1:{}/admin".format(
+            _XAMS.get("MONGO_USER", "user"),
+            _XAMS.get("MONGO_PASSWORD", "password"),
+            _XAMS.get("MONGO_PORT", "27017"),
+        ),
     )
     run_db: str = os.getenv("XAMS_RUN_DB", "run")
     run_collection: str = os.getenv("XAMS_RUN_COLLECTION", "runs_gas")
@@ -36,7 +41,9 @@ class Settings:
         "XAMS_STBC_AMSTRAX_DIR", "/data/xenon/xams_v2/software/amstrax/amstrax/auto_processing_new"
     )
     stbc_log_dir: str = _cfg_env("XAMS_STBC_LOG_DIR", "/data/xenon/xams_v2/logs")
-    stbc_output_dir: str = _cfg_env("XAMS_STBC_OUTPUT_DIR", _XAMS.get("XAMS_PROCESSED_FOLDER", "/data/xenon/xams_v2/xams_processed"))
+    stbc_output_dir: str = _cfg_env(
+        "XAMS_STBC_OUTPUT_DIR", _XAMS.get("XAMS_PROCESSED_FOLDER", "/data/xenon/xams_v2/xams_processed")
+    )
 
 
 settings = Settings()
