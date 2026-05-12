@@ -114,6 +114,12 @@ def submit_processing(_clicks, run_id):
     if d is None:
         return f"Run {run_id} not found"
 
+    mode = (d.mode or "").lower()
+    tags = [t.get("name", "").lower() for t in d.tags]
+    is_led_run = ("led" in mode) or ("led" in tags)
+    if is_led_run:
+        return "This is an LED run; events/peaks are not produced by this pipeline (raw_records -> records_led -> led_calibration)."
+
     has_loadable_events = any(r["type"] == "events" and r["loadable"] for r in assess_loadability(d))
     if has_loadable_events:
         return "Loadable events already present; no job submitted"
