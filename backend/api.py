@@ -6,7 +6,7 @@ from typing import Any
 
 from flask import Blueprint, jsonify, request
 
-from .loadability import assess_loadability
+from .loadability import scan_disk_availability
 from .mongo_service import MongoService
 from .processing_service import ProcessingService
 
@@ -38,10 +38,7 @@ def create_api_blueprint(mongo: MongoService, processing: ProcessingService) -> 
 
     @bp.get("/runs/<int:run_id>/loadability")
     def get_loadability(run_id: int):
-        d = mongo.get_run_details(run_id)
-        if d is None:
-            return jsonify({"error": "run_not_found", "run_id": run_id}), 404
-        return jsonify(assess_loadability(d))
+        return jsonify(scan_disk_availability(run_id))
 
     @bp.post("/process")
     def process_run():
