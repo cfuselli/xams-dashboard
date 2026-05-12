@@ -64,7 +64,7 @@ class MongoService:
                     end=doc.get("end"),
                     processing_status=ps.get("status"),
                     has_raw_records=("raw_records" in dtypes),
-                    has_events=("events" in dtypes),
+                    has_events=("events" in dtypes or "event_info" in dtypes),
                 )
             )
         return out

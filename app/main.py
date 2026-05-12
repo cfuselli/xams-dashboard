@@ -25,7 +25,7 @@ RUN_TABLE_COLS = [
     {"name": "Run", "id": "run_id"},
     {"name": "Mode", "id": "mode"},
     {"name": "Raw", "id": "has_raw_records"},
-    {"name": "Events", "id": "has_events"},
+    {"name": "Event info", "id": "has_events"},
     {"name": "Start", "id": "start"},
     {"name": "End", "id": "end"},
     {"name": "Status", "id": "processing_status"},
@@ -40,7 +40,7 @@ app.layout = html.Div(
             [
                 dcc.Input(id="run-id-input", type="number", placeholder="Run ID", min=0),
                 html.Button("Load Run", id="load-run-btn", n_clicks=0),
-                html.Button("Process to events", id="process-btn", n_clicks=0),
+                html.Button("Process to event_info", id="process-btn", n_clicks=0),
                 html.Button("Refresh Now", id="refresh-now-btn", n_clicks=0),
                 html.Span(id="action-status", style={"marginLeft": "12px", "fontWeight": "600"}),
             ],
