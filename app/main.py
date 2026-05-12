@@ -54,7 +54,11 @@ app.layout = html.Div(
             data=[],
             row_selectable="single",
             selected_rows=[],
-            page_size=15,
+            page_size=20,
+            page_action="native",
+            filter_action="native",
+            sort_action="native",
+            sort_mode="multi",
             style_cell={"textAlign": "left", "padding": "6px", "fontFamily": "monospace", "fontSize": "12px"},
             style_data_conditional=[
                 {"if": {"filter_query": '{processing_status} = "done"'}, "backgroundColor": "#e9f7ef"},
@@ -93,7 +97,7 @@ app.layout = html.Div(
     State("selected-run-store", "data"),
 )
 def refresh_runs(_n, _refresh_clicks, _load_clicks, selected):
-    runs = mongo.get_runs(page=1, page_size=40)
+    runs = mongo.get_runs(page=1, page_size=None)
     rows = [
         {
             "run_id": r.number,

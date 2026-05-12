@@ -46,12 +46,13 @@ class MongoService:
         if status:
             query["processing_status.status"] = status
 
-        cursor = (
-            self.runs.find(query, {"number": 1, "mode": 1, "start": 1, "end": 1, "processing_status": 1, "data.type": 1, "_id": 0})
-            .sort("number", -1)
-            .skip((page - 1) * page_size)
-            .limit(page_size)
-        )
+        cursor = self.runs.find(
+            query, {"number": 1, "mode": 1, "start": 1, "end": 1, "processing_status": 1, "data.type": 1, "_id": 0}
+        ).sort("number", -1)
+
+        if page_size is not None and page_size > 0:
+            cursor = cursor.skip((page - 1) * page_size).limit(page_size)
+
         out: list[RunSummary] = []
         for doc in cursor:
             ps = doc.get("processing_status") or {}
