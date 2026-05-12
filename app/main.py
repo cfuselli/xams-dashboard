@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 import os
+from urllib.parse import parse_qs, urlencode
 
 import dash
 from dash import Dash, Input, Output, State, dash_table, dcc, html
+from dash.exceptions import PreventUpdate
 
 from backend.api import create_api_blueprint
 from backend.events_loader import load_event_features
@@ -33,6 +35,7 @@ RUN_TABLE_COLS = [
 
 app.layout = html.Div(
     [
+        dcc.Location(id="url", refresh=False),
         dcc.Store(id="selected-run-store", data={"run_id": None}),
         dcc.Interval(id="refresh-interval", interval=20_000, n_intervals=0),
         html.H2("XAMS Dashboard"),
@@ -123,13 +126,25 @@ def refresh_runs(_n, _refresh_clicks, _load_clicks, selected):
 @app.callback(
     Output("selected-run-store", "data"),
     Output("run-id-input", "value"),
+    Input("url", "search"),
     Input("load-run-btn", "n_clicks"),
     Input("runs-table", "selected_rows"),
     State("run-id-input", "value"),
     State("runs-table", "data"),
     State("selected-run-store", "data"),
 )
-def choose_run(_load_clicks, selected_rows, typed_run_id, table_data, current):
+def choose_run(url_search, _load_clicks, selected_rows, typed_run_id, table_data, current):
+    # Priority 1: URL query run_id, so Command-R keeps selection
+    if url_search:
+        q = parse_qs(url_search.lstrip("?"))
+        run_vals = q.get("run_id", [])
+        if run_vals:
+            try:
+                rid = int(run_vals[0])
+                return {"run_id": rid}, rid
+            except Exception:
+                pass
+
     if selected_rows and table_data:
         idx = selected_rows[0]
         if 0 <= idx < len(table_data):
@@ -145,6 +160,25 @@ def choose_run(_load_clicks, selected_rows, typed_run_id, table_data, current):
         return current, rid
 
     return {"run_id": None}, None
+
+
+@app.callback(
+    Output("url", "search"),
+    Input("selected-run-store", "data"),
+    State("url", "search"),
+    prevent_initial_call=True,
+)
+def sync_url_with_selected_run(selected, current_search):
+    rid = (selected or {}).get("run_id")
+    if rid is None:
+        if current_search:
+            return ""
+        raise PreventUpdate
+
+    target = "?" + urlencode({"run_id": int(rid)})
+    if target == (current_search or ""):
+        raise PreventUpdate
+    return target
 
 
 @app.callback(
