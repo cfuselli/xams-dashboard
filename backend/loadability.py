@@ -5,7 +5,18 @@ from typing import Any, Dict, List
 
 from .config import settings
 
-TARGET_TYPES = ("raw_records", "raw_records_ext", "raw_records_sipm", "peaks", "events", "records_led", "led_calibration")
+TARGET_TYPES = (
+    "raw_records",
+    "raw_records_ext",
+    "raw_records_sipm",
+    "peaks",
+    "events",
+    "event_info",
+    "event_basics",
+    "event_positions",
+    "records_led",
+    "led_calibration",
+)
 
 
 def _storage_locations() -> List[str]:

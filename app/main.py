@@ -223,11 +223,11 @@ def submit_processing(_clicks, selected):
         return "LED run detected. Events are not produced in this mode."
 
     availability = scan_disk_availability(int(run_id))
-    has_events = any((r.get("type") == "events" and r.get("loadable")) for r in availability)
+    has_events = any((r.get("type") in ("event_info", "events") and r.get("loadable")) for r in availability)
     if has_events:
         return "Events already found on disk; no submission needed"
 
-    out = processing.submit_run(int(run_id), target="events")
+    out = processing.submit_run(int(run_id), target="event_info")
     if out["submitted"]:
         return "Submitted processing job for run {}".format(run_id)
     if out["returncode"] == 409:

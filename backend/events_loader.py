@@ -31,12 +31,20 @@ def load_event_features(run_id: int, max_points: int = 120000) -> Dict[str, Any]
 
         st = amstrax.contexts.xams(output_folder="/data/xenon/xams_v2/xams_processed")
         rid = "{:06d}".format(run_id)
-        if not st.is_stored(rid, "events"):
-            payload["reason"] = "events not stored in current context"
+
+        arr = None
+        source_type = None
+        for t in ("event_info", "event_basics", "events"):
+            if st.is_stored(rid, t):
+                arr = st.get_array(rid, t, progress_bar=False)
+                source_type = t
+                break
+
+        if arr is None:
+            payload["reason"] = "no event-level dataset (event_info/event_basics/events) stored in current context"
             _CACHE[run_id] = (now, payload)
             return payload
 
-        arr = st.get_array(rid, "events", progress_bar=False)
         if len(arr) == 0:
             payload["reason"] = "events array empty"
             _CACHE[run_id] = (now, payload)
@@ -51,15 +59,19 @@ def load_event_features(run_id: int, max_points: int = 120000) -> Dict[str, Any]
                 return arr[name].tolist()
             return []
 
+        drift = col("drift_time")
+        if not drift and "time" in names and "endtime" in names:
+            drift = (arr["endtime"] - arr["time"]).tolist()
+
         payload.update(
             {
                 "ok": True,
-                "drift_time": col("drift_time"),
+                "drift_time": drift,
                 "s1_area": col("s1_area"),
                 "s2_area": col("s2_area"),
                 "x": col("x"),
                 "y": col("y"),
-                "reason": "ok",
+                "reason": "ok ({})".format(source_type),
             }
         )
     except Exception as e:
