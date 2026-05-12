@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import subprocess
 from datetime import datetime
+import time
+from typing import Dict
 
 from .config import settings
 
@@ -12,8 +14,23 @@ class ProcessingService:
         self.amstrax_dir = amstrax_dir or settings.stbc_amstrax_dir
         self.log_dir = log_dir or settings.stbc_log_dir
         self.output_dir = output_dir or settings.stbc_output_dir
+        self._last_submit_by_run = {}  # type: Dict[int, float]
+        self._cooldown_seconds = 45
 
     def submit_run(self, run_id: int, target: str = "events") -> dict:
+        now = time.time()
+        last = self._last_submit_by_run.get(int(run_id), 0.0)
+        if now - last < self._cooldown_seconds:
+            return {
+                "run_id": int(run_id),
+                "target": target,
+                "job_name": None,
+                "submitted": False,
+                "returncode": 409,
+                "stdout": "",
+                "stderr": "Submission blocked: cooldown active for this run. Wait and refresh status.",
+            }
+
         run_id_s = f"{int(run_id):06d}"
         job_name = f"process_{run_id_s}_manual_{target}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
 
@@ -31,6 +48,8 @@ class ProcessingService:
         try:
             os.makedirs(self.log_dir, exist_ok=True)
             p = subprocess.run(cmd, cwd=self.amstrax_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if p.returncode == 0:
+                self._last_submit_by_run[int(run_id)] = now
             return {
                 "run_id": int(run_id),
                 "target": target,

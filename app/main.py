@@ -106,6 +106,10 @@ def submit_processing(_clicks, run_id):
     if run_id is None:
         return "Set run id first"
 
+    status = mongo.get_job_status(int(run_id))
+    if status.get("status") in ("submitted", "running"):
+        return f"Run {run_id} already {status.get('status')}; not submitting again"
+
     d = mongo.get_run_details(int(run_id))
     if d is None:
         return f"Run {run_id} not found"
@@ -117,6 +121,8 @@ def submit_processing(_clicks, run_id):
     out = processing.submit_run(int(run_id), target="events")
     if out["submitted"]:
         return f"Submitted processing job for run {run_id}"
+    if out["returncode"] == 409:
+        return f"Skipped duplicate submit for run {run_id} (cooldown)"
     return f"Submission failed (code={out['returncode']})"
 
 
