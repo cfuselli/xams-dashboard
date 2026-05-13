@@ -5,6 +5,7 @@ import subprocess
 from datetime import datetime
 import time
 import glob
+import re
 from typing import Dict, List, Optional, Union, Tuple
 
 from .config import settings
@@ -86,6 +87,36 @@ class ProcessingService:
                     f"no range match in {correction_file} (key={correction_key})",
                 )
         return True, ""
+
+    def list_corrections_compatibility(self, run_id: int) -> dict:
+        versions = []
+        try:
+            import amstrax_files  # type: ignore
+            root = os.path.join(os.path.dirname(amstrax_files.__file__), "..", "corrections", "_global")
+            root = os.path.abspath(root)
+            if os.path.isdir(root):
+                for fn in os.listdir(root):
+                    m = re.match(r"^_global_(.+)\.json$", fn)
+                    if m:
+                        versions.append(m.group(1))
+        except Exception:
+            pass
+        if not versions:
+            versions = ["ONLINE", "v2", "v1", "v0", "dev"]
+        # Deterministic ordering: ONLINE, vN descending, then others.
+        def _key(v: str):
+            if v == "ONLINE":
+                return (0, 0, v)
+            mv = re.match(r"^v(\d+)$", v)
+            if mv:
+                return (1, -int(mv.group(1)), v)
+            return (2, 0, v)
+        versions = sorted(set(versions), key=_key)
+        rows = []
+        for ver in versions:
+            ok, reason = self._validate_corrections_coverage(int(run_id), ver)
+            rows.append({"version": ver, "compatible": bool(ok), "reason": "" if ok else reason})
+        return {"run_id": int(run_id), "rows": rows}
 
     def _resolve_amstrax_path(self, amstrax_ref: Optional[str]) -> Optional[str]:
         if not amstrax_ref:

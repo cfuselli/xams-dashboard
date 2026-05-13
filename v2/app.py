@@ -178,6 +178,11 @@ def v2_run_job_logs(run_id: int):
     return jsonify(processing.get_run_job_logs(run_id=run_id, limit=limit))
 
 
+@app.get('/api/v2/run/<int:run_id>/corrections-compat')
+def v2_run_corrections_compat(run_id: int):
+    return jsonify(processing.list_corrections_compatibility(run_id=run_id))
+
+
 @app.post('/api/v2/backfill-bookkeeping')
 def v2_backfill_bookkeeping():
     body = request.get_json(force=True, silent=True) or {}

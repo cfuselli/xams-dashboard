@@ -81,6 +81,7 @@ async function loadRun(runId){
     renderPlots();
   }
   loadJobLogs(runId);
+  loadCorrectionsCompatibility(runId);
 }
 
 function rebin2D(x,y,bx,by){
@@ -302,6 +303,22 @@ async function loadJobLogs(runId){
   }
 }
 
+async function loadCorrectionsCompatibility(runId){
+  try{
+    const r=await fetch(`/api/v2/run/${runId}/corrections-compat`);
+    const j=await r.json();
+    const rows=j.rows||[];
+    if(!rows.length){
+      $('corrCompat').textContent='No correction versions discovered.';
+      return;
+    }
+    const lines=rows.map(x=>`${x.compatible?'OK ':'NO '} ${x.version}${x.compatible?'':` - ${x.reason||'not compatible'}`}`);
+    $('corrCompat').textContent=lines.join('\n');
+  }catch(_e){
+    $('corrCompat').textContent='Failed to load corrections compatibility.';
+  }
+}
+
 function setActiveTab(name){
   document.querySelectorAll('.tab-btn').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.tab===name);
@@ -329,6 +346,7 @@ function init(){
   $('clearSelection').onclick=clearSelection;
   $('showSelected').onclick=showSelected;
   $('refreshJobLogs').onclick=()=>{if(state.selectedRun) loadJobLogs(state.selectedRun)};
+  $('refreshCorrCompat').onclick=()=>{if(state.selectedRun) loadCorrectionsCompatibility(state.selectedRun)};
   $('binsDrift').oninput=()=>renderPlots();
   $('binsS1S2').oninput=()=>renderPlots();
   $('binsXY').oninput=()=>renderPlots();

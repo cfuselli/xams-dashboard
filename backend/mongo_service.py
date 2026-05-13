@@ -272,7 +272,14 @@ class MongoService:
         }
 
     def append_processing_history(self, run_id: int, entry: dict[str, Any]) -> None:
-        self.runs.update_one({"number": int(run_id)}, {"$push": {"processing_history": entry}})
+        now = datetime.utcnow()
+        payload = dict(entry or {})
+        payload.setdefault("time", now)
+        payload.setdefault("user", getpass.getuser())
+        payload.setdefault("host", "stbc-i1")
+        payload.setdefault("action", "dashboard_submit")
+        payload.setdefault("status", "unknown")
+        self.runs.update_one({"number": int(run_id)}, {"$push": {"processing_history": payload}})
 
     def _infer_run_class(self, mode: str) -> str:
         m = (mode or "").lower()
