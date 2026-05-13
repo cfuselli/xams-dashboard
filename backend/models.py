@@ -24,6 +24,9 @@ class RunSummary:
     processing_status: str 
     has_raw_records: bool
     has_events: bool
+    science_run_id: str
+    run_class: str
+    source_type: str
 
 
 @dataclass

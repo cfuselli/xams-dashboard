@@ -11,48 +11,140 @@
   <div class="bg"></div>
   <div class="app">
     <header class="topbar">
-      <h1>XAMS Dashboard <span>v2</span></h1>
-      <div class="controls">
-        <input id="search" placeholder="Search run id / mode / status" />
-        <select id="statusFilter">
-          <option value="">All status</option>
-          <option value="done">done</option>
-          <option value="submitted">submitted</option>
-          <option value="running">running</option>
-          <option value="failed">failed</option>
-        </select>
-        <button id="refreshBtn">Refresh</button>
+      <div class="title-wrap">
+        <h1>XAMS Dashboard <span>v2</span></h1>
+        <div class="nav-links">
+          <a class="nav-link active" href="/v2">Runs</a>
+          <a class="nav-link" href="/v2/admin">Admin</a>
+        </div>
       </div>
     </header>
 
-    <main class="grid">
-      <section class="panel runs">
-        <div class="panel-title">Runs</div>
-        <table id="runsTable">
-          <thead><tr><th></th><th>Run</th><th>Mode</th><th>Raw</th><th>Event info</th><th>Status</th><th>Start</th></tr></thead>
-          <tbody></tbody>
-        </table>
+    <main class="workspace">
+      <section class="panel run-browser-panel">
+        <div class="panel-title">Run Browser <span id="activeSrBadge"></span></div>
+        <div class="controls">
+          <input id="search" placeholder="Search run id / mode / status" />
+          <select id="srFilter">
+            <option value="">Active SR</option>
+            <option value="all">All SR</option>
+          </select>
+          <select id="runClassFilter">
+            <option value="">All classes</option>
+            <option value="science">science</option>
+            <option value="calibration">calibration</option>
+            <option value="led">led</option>
+            <option value="test">test</option>
+          </select>
+          <input id="sourceTypeFilter" placeholder="Source type (e.g. cs137)" />
+          <select id="runModeFilter"><option value="">All modes</option></select>
+          <select id="statusFilter">
+            <option value="">All status</option>
+            <option value="done">done</option>
+            <option value="submitted">submitted</option>
+            <option value="running">running</option>
+            <option value="failed">failed</option>
+          </select>
+          <button id="refreshBtn">Apply</button>
+        </div>
+        <div class="table-wrap runs-table-wrap">
+          <table id="runsTable">
+            <thead><tr><th></th><th>Run</th><th>SR</th><th>Class</th><th>Source</th><th>Mode</th><th>Raw</th><th>Event info</th><th>Status</th><th>Start</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
         <div class="pager"><button id="prevPage">Prev</button><span id="pageInfo"></span><button id="nextPage">Next</button></div>
-        <div class="batch-actions"><button id="submitSelected">Submit Selected</button><span id="submitResult"></span></div>
+        <div class="batch-actions">
+          <button id="selectPage">Select Page</button>
+          <button id="clearSelection">Clear Selection</button>
+          <button id="showSelected">Open First Selected</button>
+        </div>
+        <div class="hint">Click a run row to set focused run (inspect/plots). Checkboxes define batch selection for processing.</div>
       </section>
 
-      <section class="panel details">
-        <div class="panel-title">Run Details</div>
-        <pre id="runSummary"></pre>
-        <details><summary>Run Document JSON</summary><textarea id="runJson" readonly></textarea></details>
-      </section>
+      <section class="panel content-panel">
+        <section class="tab-panel-wrap">
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="inspect">Inspect</button>
+            <button class="tab-btn" data-tab="plots">Plots</button>
+            <button class="tab-btn" data-tab="processing">Processing & Queue</button>
+          </div>
 
-      <section class="panel availability">
-        <div class="panel-title">Availability / Loadability</div>
-        <div class="table-wrap"><table id="availTable"><thead><tr><th>Type</th><th>Lineage</th><th>Current</th><th>Loadable</th><th>Files</th><th>Size MB</th><th>Reason</th></tr></thead><tbody></tbody></table></div>
-      </section>
+          <div id="tab-inspect" class="tab-content active">
+            <section class="subpanel">
+              <div class="panel-title">Run Details</div>
+              <pre id="runSummary"></pre>
+            </section>
+            <section class="subpanel">
+              <div class="panel-title">Availability / Loadability</div>
+              <div class="table-wrap"><table id="availTable"><thead><tr><th>Type</th><th>Lineage</th><th>Current</th><th>Loadable</th><th>Files</th><th>Size MB</th><th>Online</th><th>Corr</th><th>Amstrax</th><th>Reason</th></tr></thead><tbody></tbody></table></div>
+            </section>
+            <section class="subpanel">
+              <div class="panel-title">Run Document</div>
+              <details><summary>Run Document JSON</summary><textarea id="runJson" readonly></textarea></details>
+            </section>
+          </div>
 
-      <section class="panel plots">
-        <div class="panel-title">Plots</div>
-        <div class="plot-controls"><label>Bins <input id="bins" type="range" min="20" max="200" value="80" /></label><label><input id="logY" type="checkbox" /> Log color scale</label><span id="plotStatus"></span></div>
-        <div id="driftPlot" class="plot"></div>
-        <div id="s1s2Plot" class="plot"></div>
-        <div id="xyPlot" class="plot"></div>
+          <div id="tab-plots" class="tab-content">
+            <div class="panel-title">Plots</div>
+            <div class="plot-controls">
+              <label>Drift bins <input id="binsDrift" type="range" min="20" max="2000" value="180" /></label>
+              <label>S1S2 bins <input id="binsS1S2" type="range" min="20" max="1500" value="180" /></label>
+              <label>XY bins <input id="binsXY" type="range" min="20" max="1500" value="180" /></label>
+              <label>Peak bins <input id="binsPeak" type="range" min="20" max="2000" value="220" /></label>
+              <label><input id="xyEqual" type="checkbox" checked /> XY equal aspect</label>
+              <label><input id="logY" type="checkbox" /> Log color scale</label>
+              <span id="plotStatus"></span>
+            </div>
+            <div class="plots-grid">
+              <div id="driftPlot" class="plot"></div>
+              <div id="s1s2Plot" class="plot"></div>
+              <div id="xyPlot" class="plot"></div>
+              <div id="peakAreaAftPlot" class="plot"></div>
+              <div id="peakAreaWidthPlot" class="plot"></div>
+              <div class="plot-block">
+                <div class="wave-nav">
+                  <button id="wavePrev">Prev waveform</button>
+                  <span id="waveInfo">No waveform loaded</span>
+                  <button id="waveNext">Next waveform</button>
+                </div>
+                <div id="waveformPlot" class="plot"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab-processing" class="tab-content">
+            <div class="panel-title">Batch Processing</div>
+            <div class="selection-summary">
+              <div><strong>Focused run:</strong> <span id="focusedRunId">none</span></div>
+              <div><strong>Batch selected:</strong> <span id="selectedCount">0</span></div>
+              <div><strong>Selected IDs:</strong> <span id="selectedRunIds">-</span></div>
+            </div>
+            <div class="batch-actions">
+              <input id="amstraxRef" placeholder="amstrax ref/path (optional)" />
+              <input id="corrVersion" placeholder="corrections version (optional)" />
+              <select id="resourceProfile">
+                <option value="8gb">8GB</option>
+                <option value="16gb">16GB</option>
+                <option value="32gb">32GB</option>
+              </select>
+              <button id="submitFocused">Reprocess Focused Run</button>
+              <button id="submitSelected">Reprocess Selected</button>
+              <span id="submitResult"></span>
+            </div>
+            <pre id="submitDetails"></pre>
+            <div class="hint">Automatic targets: LED runs -&gt; raw_records, records_led, led_calibration. Other runs -&gt; peak_basics, event_basics, event_positions, event_info.</div>
+            <div class="panel-title small-top">Queue Snapshot</div>
+            <div class="hint">Held/Running/Idle: <span id="heldJobs">0</span></div>
+            <pre id="jobsList"></pre>
+            <div class="panel-title small-top">Job Logs</div>
+            <div class="batch-actions">
+              <button id="refreshJobLogs">Refresh Job Logs</button>
+              <span class="hint">Condor/script logs matching selected run id</span>
+            </div>
+            <pre id="jobLogs"></pre>
+          </div>
+        </section>
       </section>
     </main>
   </div>

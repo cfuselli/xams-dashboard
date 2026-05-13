@@ -10,6 +10,7 @@ TARGET_TYPES = (
     "raw_records_ext",
     "raw_records_sipm",
     "peaks",
+    "peak_basics",
     "events",
     "event_info",
     "event_basics",
@@ -57,24 +58,58 @@ def _parse_dataset_dirname(dirname: str) -> Dict[str, Any]:
     return {"run_prefix": run_prefix, "type": data_type, "lineage_hash": lineage}
 
 
+def _run_db_data_metadata(run_id: int) -> Dict[tuple[str, str], Dict[str, Any]]:
+    out: Dict[tuple[str, str], Dict[str, Any]] = {}
+    try:
+        import amstrax  # type: ignore
+
+        doc = amstrax.get_mongo_collection().find_one({"number": int(run_id)}, {"data": 1, "_id": 0}) or {}
+        for e in doc.get("data", []):
+            if not isinstance(e, dict):
+                continue
+            dtype = str(e.get("type") or "")
+            lineage = str(e.get("lineage_hash") or e.get("lineage") or e.get("hash") or "")
+            if not dtype:
+                continue
+            out[(dtype, lineage)] = {
+                "db_host": e.get("host"),
+                "db_location": e.get("location"),
+                "db_corrections_version": e.get("corrections_version"),
+                "db_amstrax_version": e.get("amstrax_version"),
+                "db_is_online": e.get("is_online"),
+            }
+            if (dtype, "") not in out:
+                out[(dtype, "")] = out[(dtype, lineage)]
+    except Exception:
+        pass
+    return out
+
+
 def scan_disk_availability(run_id: int) -> List[Dict[str, Any]]:
     run6 = "{:06d}".format(int(run_id))
     rows = []
     current_lineage = {}
     type_is_stored = {}
+    db_meta = _run_db_data_metadata(run_id)
 
     try:
         import amstrax  # type: ignore
 
         st = amstrax.contexts.xams(output_folder=settings.stbc_output_dir)
+        st_led = None
+        try:
+            st_led = amstrax.contexts.xams_led(output_folder=settings.stbc_output_dir)
+        except Exception:
+            st_led = None
         run6 = "{:06d}".format(int(run_id))
         for t in TARGET_TYPES:
+            ctx = st_led if (t in ("records_led", "led_calibration") and st_led is not None) else st
             try:
-                type_is_stored[t] = bool(st.is_stored(run6, t))
+                type_is_stored[t] = bool(ctx.is_stored(run6, t))
             except Exception:
                 type_is_stored[t] = False
             try:
-                current_lineage[t] = st.key_for(run6, t).lineage_hash
+                current_lineage[t] = ctx.key_for(run6, t).lineage_hash
             except Exception:
                 current_lineage[t] = None
     except Exception:
@@ -114,6 +149,7 @@ def scan_disk_availability(run_id: int) -> List[Dict[str, Any]]:
             except Exception:
                 pass
 
+            md = db_meta.get((meta["type"], meta["lineage_hash"])) or db_meta.get((meta["type"], "")) or {}
             rows.append(
                 {
                     "type": meta["type"],
@@ -136,6 +172,11 @@ def scan_disk_availability(run_id: int) -> List[Dict[str, Any]]:
                         current_lineage=current_lineage.get(meta["type"]),
                         is_stored=type_is_stored.get(meta["type"], False),
                     ),
+                    "db_host": md.get("db_host"),
+                    "db_location": md.get("db_location"),
+                    "db_corrections_version": md.get("db_corrections_version"),
+                    "db_amstrax_version": md.get("db_amstrax_version"),
+                    "db_is_online": md.get("db_is_online"),
                 }
             )
 

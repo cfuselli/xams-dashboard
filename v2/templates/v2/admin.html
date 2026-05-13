@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>XAMS Dashboard v2 Admin</title>
+  <link rel="stylesheet" href="/static/v2/styles.css" />
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="app">
+    <header class="topbar">
+      <h1>XAMS Dashboard <span>v2</span></h1>
+      <div class="nav-links">
+        <a class="nav-link" href="/v2">Runs & Plots</a>
+        <a class="nav-link active" href="/v2/admin">Admin</a>
+      </div>
+    </header>
+
+    <main class="grid admin-grid">
+      <section class="panel">
+        <div class="panel-title">Bookkeeping Backfill</div>
+        <p class="hint">Use this page only for migration/bookkeeping tasks. Normal operation stays in Runs & Plots.</p>
+        <div class="batch-actions">
+          <input id="backfillSr" placeholder="Science Run (e.g. SR-2026.2)" />
+          <select id="backfillRunClass">
+            <option value="">Infer class</option>
+            <option value="science">science</option>
+            <option value="calibration">calibration</option>
+            <option value="led">led</option>
+            <option value="test">test</option>
+          </select>
+          <input id="backfillSourceType" placeholder="Source type (default none)" />
+          <input id="backfillRunMin" type="number" placeholder="Run min" />
+          <input id="backfillRunMax" type="number" placeholder="Run max" />
+          <label><input id="backfillOnlyMissing" type="checkbox" checked /> only missing</label>
+          <button id="backfillPreview">Preview</button>
+          <button id="backfillApply">Apply</button>
+        </div>
+        <div class="hint"><span id="backfillResult"></span></div>
+        <div class="hint"><pre id="backfillPreviewText"></pre></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">Queue Status</div>
+        <div class="hint">Held/running/idle counts refresh every 20s.</div>
+        <div class="hint">Jobs: <span id="heldJobs">-</span></div>
+        <pre id="jobsList"></pre>
+      </section>
+    </main>
+  </div>
+  <script src="/static/v2/admin.js"></script>
+</body>
+</html>
