@@ -1,4 +1,4 @@
-# XAMS Dashboard (v1)
+# XAMS Dashboard
 
 Dash-based run browser and processing trigger UI for XAMS on STBC.
 
@@ -17,7 +17,7 @@ pip install -r requirements.txt
 python -m app.main
 ```
 
-Open: http://127.0.0.1:8050
+Open: http://127.0.0.1:8070
 
 ## Environment variables
 - `XAMS_MONGO_URI` (default: `mongodb://user:password@127.0.0.1:27017/admin`)
@@ -29,7 +29,7 @@ Open: http://127.0.0.1:8050
 - `XAMS_STBC_LOG_DIR` (default: `/data/xenon/xams_v2/logs`)
 - `XAMS_STBC_OUTPUT_DIR` (default: `/data/xenon/xams_v2/xams_processed`)
 - `XAMS_DASH_HOST` (default: `127.0.0.1`)
-- `XAMS_DASH_PORT` (default: `8050`)
+- `XAMS_DASH_PORT` (default: `8070`)
 
 ## STBC ops
 Use scripts in `ops/`:
@@ -38,3 +38,6 @@ Use scripts in `ops/`:
 - `restart_dashboard.sh`
 - `status_dashboard.sh`
 - `start_autoprocess_online.sh`
+
+Default dashboard URL on STBC (with tunnel):
+- `http://127.0.0.1:18070/?run_id=<RUN_ID>`

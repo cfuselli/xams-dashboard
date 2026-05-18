@@ -31,7 +31,7 @@ async function runBackfill(dryRun){
   }
   if(!dryRun && !window.confirm('Apply bookkeeping backfill to matched runs?')) return;
   $('backfillResult').textContent=dryRun?'Previewing...':'Applying...';
-  const r=await fetch('/api/v2/backfill-bookkeeping',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const r=await fetch('/api/backfill-bookkeeping',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   const j=await r.json();
   $('backfillResult').textContent=`matched ${j.matched}, updates ${j.candidate_updates}, applied ${j.applied}, only_missing=${j.only_missing}`;
   renderBackfillPreview(j);
@@ -39,7 +39,7 @@ async function runBackfill(dryRun){
 
 async function refreshQueue(){
   try{
-    const rq=await fetch('/api/v2/jobs');
+    const rq=await fetch('/api/jobs');
     const jq=await rq.json();
     const c=jq.counts||{};
     $('heldJobs').textContent=`held ${c.held||0}, running ${c.running||0}, idle ${c.idle||0}`;
@@ -51,7 +51,7 @@ async function refreshQueue(){
 }
 
 async function init(){
-  const m=await fetch('/api/v2/meta').then(r=>r.json()).catch(()=>({}));
+  const m=await fetch('/api/meta').then(r=>r.json()).catch(()=>({}));
   if(m.active_science_run){
     $('backfillSr').value=m.active_science_run;
   }

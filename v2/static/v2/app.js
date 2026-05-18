@@ -19,7 +19,7 @@ async function fetchRuns(){
   const src=encodeURIComponent($('sourceTypeFilter').value||'');
   const mode=encodeURIComponent($('runModeFilter').value||'');
   const useActiveSr=sr&&sr!=='all'?'0':'1';
-  const r=await fetch(`/api/v2/runs?page=${state.page}&page_size=${state.pageSize}&q=${q}&status=${st}&science_run_id=${sr}&run_class=${rc}&source_type=${src}&run_mode=${mode}&use_active_sr=${useActiveSr}`);
+  const r=await fetch(`/api/runs?page=${state.page}&page_size=${state.pageSize}&q=${q}&status=${st}&science_run_id=${sr}&run_class=${rc}&source_type=${src}&run_mode=${mode}&use_active_sr=${useActiveSr}`);
   const j=await r.json(); Object.assign(state,{total:j.total,nPages:j.n_pages,page:j.page,rows:j.rows,activeScienceRun:j.active_science_run||''});
   $('activeSrBadge').textContent=state.activeScienceRun?`(active: ${state.activeScienceRun})`:'';
   if(!state.selectedRun && state.rows.length){
@@ -44,9 +44,9 @@ function renderRuns(){
 
 async function loadRun(runId){
   $('plotStatus').textContent='Loading run...';
-  const runP=fetch(`/api/v2/run/${runId}`).then(r=>r.ok?r.json():Promise.reject(new Error(`run ${r.status}`)));
-  const avP=fetch(`/api/v2/run/${runId}/availability`).then(r=>r.ok?r.json():Promise.reject(new Error(`availability ${r.status}`)));
-  const plP=fetch(`/api/v2/run/${runId}/plot-data?max_points=100000&max_peaks=150000&max_waveforms=40`).then(r=>r.ok?r.json():Promise.reject(new Error(`plot ${r.status}`)));
+  const runP=fetch(`/api/run/${runId}`).then(r=>r.ok?r.json():Promise.reject(new Error(`run ${r.status}`)));
+  const avP=fetch(`/api/run/${runId}/availability`).then(r=>r.ok?r.json():Promise.reject(new Error(`availability ${r.status}`)));
+  const plP=fetch(`/api/run/${runId}/plot-data?max_points=100000&max_peaks=150000&max_waveforms=40`).then(r=>r.ok?r.json():Promise.reject(new Error(`plot ${r.status}`)));
 
   const [runR,avR,plR]=await Promise.allSettled([runP,avP,plP]);
 
@@ -195,7 +195,7 @@ async function submitRunIds(run_ids, label){
   const resource_profile=($('resourceProfile').value||'8gb').trim();
   $('submitResult').textContent=`Submitting ${label}...`;
   if($('submitDetails')) $('submitDetails').textContent='';
-  const r=await fetch('/api/v2/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({run_ids,targets:['peak_basics','event_basics','event_positions','event_info'],amstrax_ref,corrections_version,resource_profile})});
+  const r=await fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({run_ids,targets:['peak_basics','event_basics','event_positions','event_info'],amstrax_ref,corrections_version,resource_profile})});
   const j=await r.json();
   $('submitResult').textContent=`Submitted ${j.submitted}, skipped ${j.skipped}, failed ${j.failed}`;
   const results=(j.results||[]);
@@ -220,7 +220,7 @@ async function submitRunIds(run_ids, label){
 }
 
 async function loadMeta(){
-  const r=await fetch('/api/v2/meta');
+  const r=await fetch('/api/meta');
   const j=await r.json();
   state.activeScienceRun=j.active_science_run||'';
   const srSel=$('srFilter');
@@ -240,11 +240,11 @@ async function loadMeta(){
 }
 
 async function refreshHeldJobs(){
-  const r=await fetch('/api/v2/held-jobs');
+  const r=await fetch('/api/held-jobs');
   const j=await r.json();
   $('heldJobs').textContent=String((j.rows||[]).length);
   try{
-    const rq=await fetch('/api/v2/jobs');
+    const rq=await fetch('/api/jobs');
     const jq=await rq.json();
     const c=jq.counts||{};
     $('heldJobs').textContent=`held ${c.held||0}, running ${c.running||0}, idle ${c.idle||0}`;
@@ -285,7 +285,7 @@ function clearSelection(){
 
 async function loadJobLogs(runId){
   try{
-    const r=await fetch(`/api/v2/run/${runId}/job-logs?limit=6`);
+    const r=await fetch(`/api/run/${runId}/job-logs?limit=6`);
     const j=await r.json();
     const files=j.files||[];
     if(!files.length){
@@ -305,7 +305,7 @@ async function loadJobLogs(runId){
 
 async function loadCorrectionsCompatibility(runId){
   try{
-    const r=await fetch(`/api/v2/run/${runId}/corrections-compat`);
+    const r=await fetch(`/api/run/${runId}/corrections-compat`);
     const j=await r.json();
     const rows=j.rows||[];
     if(!rows.length){

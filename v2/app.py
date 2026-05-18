@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import os
 from datetime import datetime
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, redirect
 
 from backend.events_loader import load_event_features
 from backend.loadability import scan_disk_availability
@@ -52,16 +52,23 @@ def _is_led_run_doc(doc):
     return False
 
 
+@app.get('/')
 @app.get('/v2')
 def v2_index():
+    if request.path == '/v2':
+        return redirect('/')
     return render_template('v2/index.html')
 
 
+@app.get('/admin')
 @app.get('/v2/admin')
 def v2_admin():
+    if request.path == '/v2/admin':
+        return redirect('/admin')
     return render_template('v2/admin.html')
 
 
+@app.get('/api/runs')
 @app.get('/api/v2/runs')
 def v2_runs():
     page = max(1, int(request.args.get('page', 1)))
@@ -115,6 +122,7 @@ def v2_runs():
     )
 
 
+@app.get('/api/meta')
 @app.get('/api/v2/meta')
 def v2_meta():
     modes = mongo.runs.distinct("mode")
@@ -129,6 +137,7 @@ def v2_meta():
     )
 
 
+@app.get('/api/run/<int:run_id>')
 @app.get('/api/v2/run/<int:run_id>')
 def v2_run(run_id: int):
     d = mongo.get_run_details(run_id)
@@ -149,21 +158,25 @@ def v2_run(run_id: int):
     })
 
 
+@app.get('/api/held-jobs')
 @app.get('/api/v2/held-jobs')
 def v2_held_jobs():
     return jsonify({'rows': mongo.get_held_jobs()})
 
 
+@app.get('/api/jobs')
 @app.get('/api/v2/jobs')
 def v2_jobs():
     return jsonify(mongo.get_queue_jobs(limit=100))
 
 
+@app.get('/api/run/<int:run_id>/availability')
 @app.get('/api/v2/run/<int:run_id>/availability')
 def v2_availability(run_id: int):
     return jsonify(scan_disk_availability(run_id))
 
 
+@app.get('/api/run/<int:run_id>/plot-data')
 @app.get('/api/v2/run/<int:run_id>/plot-data')
 def v2_plot_data(run_id: int):
     max_points = min(150000, max(5000, int(request.args.get('max_points', 80000))))
@@ -172,17 +185,20 @@ def v2_plot_data(run_id: int):
     return jsonify(load_event_features(run_id=run_id, max_points=max_points, max_peaks=max_peaks, max_waveforms=max_waveforms))
 
 
+@app.get('/api/run/<int:run_id>/job-logs')
 @app.get('/api/v2/run/<int:run_id>/job-logs')
 def v2_run_job_logs(run_id: int):
     limit = min(12, max(1, int(request.args.get('limit', 6))))
     return jsonify(processing.get_run_job_logs(run_id=run_id, limit=limit))
 
 
+@app.get('/api/run/<int:run_id>/corrections-compat')
 @app.get('/api/v2/run/<int:run_id>/corrections-compat')
 def v2_run_corrections_compat(run_id: int):
     return jsonify(processing.list_corrections_compatibility(run_id=run_id))
 
 
+@app.post('/api/backfill-bookkeeping')
 @app.post('/api/v2/backfill-bookkeeping')
 def v2_backfill_bookkeeping():
     body = request.get_json(force=True, silent=True) or {}
@@ -209,6 +225,7 @@ def v2_backfill_bookkeeping():
     return jsonify(result)
 
 
+@app.post('/api/submit')
 @app.post('/api/v2/submit')
 def v2_submit():
     body = request.get_json(force=True, silent=True) or {}
@@ -304,4 +321,6 @@ def v2_submit():
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8070, debug=False)
+    host = os.getenv('XAMS_DASH_HOST', '127.0.0.1')
+    port = int(os.getenv('XAMS_DASH_PORT', '8070'))
+    app.run(host=host, port=port, debug=False)
