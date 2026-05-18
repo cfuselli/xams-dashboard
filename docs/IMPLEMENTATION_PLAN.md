@@ -30,17 +30,17 @@ Create and maintain a standalone repo (`xams-dashboard`) with clear separation:
 
 Core endpoints:
 
-1. `GET /api/v2/runs`
+1. `GET /api/runs`
    - paginated run rows
    - search + status filter
    - quick availability flags (`raw`, `event_info`)
-2. `GET /api/v2/run/<run_id>`
+2. `GET /api/run/<run_id>`
    - normalized run details + processing status + raw rundoc
-3. `GET /api/v2/run/<run_id>/availability`
+3. `GET /api/run/<run_id>/availability`
    - disk-first availability/loadability report by data type
-4. `GET /api/v2/run/<run_id>/plot-data`
+4. `GET /api/run/<run_id>/plot-data`
    - extracted arrays for drift, S1/S2, XY plots
-5. `POST /api/v2/submit`
+5. `POST /api/submit`
    - batch submission wrapper for chosen runs + targets
    - duplicate-safe logic (skip when requested targets already loadable)
 
@@ -91,8 +91,8 @@ Plots panel:
 
 ## 7. Ops/deployment plan
 
-- `ops/start_dashboard_v2.sh`: launch screen session (`xams_dashboard_v2`) on fixed port.
-- `ops/stop_dashboard_v2.sh`: stop process cleanly.
+- `ops/start_dashboard.sh`: launch screen session (`xams_dashboard`) on fixed port.
+- `ops/stop_dashboard.sh`: stop process cleanly.
 - Use `/data/xenon/xams_v2/setup.sh` and `.xams_config` conventions.
 - Verify health with API probes after restart.
 

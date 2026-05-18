@@ -13,7 +13,7 @@ Build a production-usable XAMS run dashboard that lives on STBC and provides a f
 4. If event-level products are available, operators can immediately inspect core analysis plots.
 5. The app can be restarted reliably on STBC (screen + scripts) with predictable behavior.
 
-## Scope for v1/v2 baseline
+## Scope for current baseline
 
 - Run browser with search/filter/pagination.
 - Run detail card with metadata and raw run document view.

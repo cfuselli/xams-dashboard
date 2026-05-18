@@ -4,7 +4,7 @@ _Date: 2026-05-12_
 
 ## Current state summary
 
-The dashboard is in a working **v2 baseline** state with real STBC deployment and core workflow operational:
+The dashboard is in a working baseline state with real STBC deployment and core workflow operational:
 
 1. browse/select runs,
 2. inspect run metadata,
@@ -16,7 +16,7 @@ The dashboard is in a working **v2 baseline** state with real STBC deployment an
 
 ### Architecture
 
-- Introduced a new Flask-based v2 app with custom frontend.
+- Flask app with custom frontend is the default dashboard service.
 - Preserved backend service layering for data access, loadability, submission, and plotting.
 
 ### Data and loadability
@@ -53,8 +53,8 @@ The dashboard is in a working **v2 baseline** state with real STBC deployment an
 
 ### Operations
 
-- STBC deployment scripts in place for v2 start/stop.
-- v2 process runs in screen (`xams_dashboard_v2`) on port `8070`.
+- STBC deployment scripts are in place for default start/stop.
+- Dashboard process runs in screen (`xams_dashboard`) on port `8070`.
 - Accessible by SSH tunnel.
 
 ## Issues found and resolved
@@ -65,7 +65,7 @@ The dashboard is in a working **v2 baseline** state with real STBC deployment an
 4. Event plots empty despite partial availability claims.
 5. Ambiguous UX between "submit" and "show" actions.
 
-All above have targeted fixes in current v2 baseline.
+All above have targeted fixes in the current baseline.
 
 ## Known limitations / open items
 

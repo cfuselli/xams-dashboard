@@ -1,6 +1,6 @@
 # XAMS Dashboard
 
-Dash-based run browser and processing trigger UI for XAMS on STBC.
+Flask-based run browser and processing trigger UI for XAMS on STBC.
 
 ## Features
 - Browse runs with status filters
@@ -14,7 +14,7 @@ Dash-based run browser and processing trigger UI for XAMS on STBC.
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m app.main
+python -m v2.app
 ```
 
 Open: http://127.0.0.1:8070
@@ -40,4 +40,8 @@ Use scripts in `ops/`:
 - `start_autoprocess_online.sh`
 
 Default dashboard URL on STBC (with tunnel):
-- `http://127.0.0.1:18070/?run_id=<RUN_ID>`
+- `http://127.0.0.1:18070`
+
+Notes:
+- `run_id` is optional and can be added as query parameter when needed.
+- Legacy `/v2` routes are kept as compatibility redirects.
